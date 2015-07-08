@@ -5,6 +5,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -13,21 +14,21 @@ import java.util.stream.Stream;
 
 public final class EarlyBindingInterfaceInterpreter {
 
-    private static final ConcurrentMap<Class<?>, Map<Method, UnboundMethodCallHandler<Object>>> cachedInterfaces =
+    private static final ConcurrentMap<Set<Class<?>>, UnboundMethodInterpreter<Object>> cachedInterfaces =
             new ConcurrentHashMap<>();
 
     public static UnboundMethodInterpreter<Object> forClasses(Class<?>...classes) {
-        return UnboundMethodInterpreter.fromMethodMap(Stream.of(classes)
+        Set<Class<?>> classSet = Stream.of(classes).collect(Collectors.toSet());
+        return cachedInterfaces.computeIfAbsent(classSet, EarlyBindingInterfaceInterpreter::forClassesUncached);
+    }
+    private static UnboundMethodInterpreter<Object> forClassesUncached(Set<Class<?>> classes) {
+        return UnboundMethodInterpreter.fromMethodMap(classes.stream()
                 .map(EarlyBindingInterfaceInterpreter::getMethodMap)
                 .flatMap(m -> m.entrySet().stream())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     private static Map<Method,UnboundMethodCallHandler<Object>> getMethodMap(Class<?> iface) {
-        return cachedInterfaces.computeIfAbsent(iface, EarlyBindingInterfaceInterpreter::getUncachedMethodMap);
-    }
-
-    private static Map<Method,UnboundMethodCallHandler<Object>> getUncachedMethodMap(Class<?> iface) {
         return Stream.of(iface.getMethods())
                 .filter(m -> Modifier.isPublic(m.getModifiers()) && !m.isDefault() && !Modifier.isStatic(m.getModifiers()))
                 .collect(Collectors.toMap(
