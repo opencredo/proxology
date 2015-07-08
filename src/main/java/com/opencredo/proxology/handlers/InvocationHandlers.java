@@ -18,7 +18,10 @@ public final class InvocationHandlers {
 
     public static InterpretingInvocationHandler intercepting(InterpretingInvocationHandler handler,
                                                              MethodCallInterceptor interceptor) {
-        return method -> interceptor.intercepting(method, handler.interpret(method));
+        return method -> {
+            MethodCallHandler methodCallHandler = handler.interpret(method);
+            return methodCallHandler == null ? null : interceptor.intercepting(method, methodCallHandler);
+        };
     }
 
     public static InterpretingInvocationHandler handlingDefaultMethods(InterpretingInvocationHandler handler) {

@@ -21,7 +21,7 @@ public class BeanMappingInterfaceInterpreter implements InterfaceInterpreter<Map
     }
 
     private Map<Method, UnboundMethodCallHandler<Map<String, Object>>> getMethodMap(Class<?> iface) {
-        return Stream.of(iface.getDeclaredMethods())
+        return Stream.of(iface.getMethods())
                 .filter(m -> !m.isDefault() && !Modifier.isStatic(m.getModifiers()))
                 .collect(Collectors.toMap(
                         Function.identity(),

@@ -10,7 +10,12 @@ import static org.hamcrest.Matchers.*;
 
 public class ProxiesTest {
 
-    public interface Person {
+    public interface Entity {
+        long getId();
+        void setId(long id);
+    }
+
+    public interface Person extends Entity {
         String getName();
         void setName(String name);
         int getAge();
@@ -22,15 +27,27 @@ public class ProxiesTest {
     }
 
     public static final class PersonImpl implements Person {
+        private long id;
         private String name;
         private int age;
 
         public PersonImpl() {
         }
 
-        public PersonImpl(String name, int age) {
+        public PersonImpl(long id, String name, int age) {
+            this.id = id;
             this.name = name;
             this.age = age;
+        }
+
+        @Override
+        public long getId() {
+            return id;
+        }
+
+        @Override
+        public void setId(long id) {
+            this.id = id;
         }
 
         @Override
@@ -59,18 +76,20 @@ public class ProxiesTest {
                 return false;
             }
             Person otherPerson = (Person) o;
-            return Objects.equals(name, otherPerson.getName())
+            return Objects.equals(id, otherPerson.getId())
+                    && Objects.equals(name, otherPerson.getName())
                     && Objects.equals(age, otherPerson.getAge());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(name, age);
+            return Objects.hash(id, name, age);
         }
 
         @Override
         public String toString() {
             return "PersonImpl{" +
+                    "id='" + id + '\'' +
                     "name='" + name + '\'' +
                     ", age=" + age +
                     '}';
@@ -89,12 +108,14 @@ public class ProxiesTest {
         };
 
         Person proxy = Proxies.intercepting(instance, Person.class, interceptor);
+        proxy.setId(13);
         proxy.setName("Arthur Putey");
         proxy.setAge(42);
 
         assertThat(proxy.display(), equalTo("Arthur Putey (42)"));
         System.out.println(callDetails);
         assertThat(callDetails, contains(
+                "setId: [13] -> null",
                 "setName: [Arthur Putey] -> null",
                 "setAge: [42] -> null",
                 "getName: null -> Arthur Putey",
@@ -104,8 +125,8 @@ public class ProxiesTest {
 
     @Test public void
     handlesObjectMethods() {
-        Person instance1 = new PersonImpl("Arthur Putey", 42);
-        Person instance2 = new PersonImpl("Arthur Putey", 42);
+        Person instance1 = new PersonImpl(1, "Arthur Putey", 42);
+        Person instance2 = new PersonImpl(1, "Arthur Putey", 42);
         List<String> callDetails = new ArrayList<>();
 
         MethodCallInterceptor interceptor = (proxy, method, args, handler) -> {
@@ -125,8 +146,8 @@ public class ProxiesTest {
 
     @Test public void
     equality() {
-        Person instance1 = new PersonImpl("Arthur Putey", 42);
-        Person instance2 = new PersonImpl("Arthur Putey", 42);
+        Person instance1 = new PersonImpl(1, "Arthur Putey", 42);
+        Person instance2 = new PersonImpl(1, "Arthur Putey", 42);
         List<String> callDetails = new ArrayList<>();
 
         MethodCallInterceptor interceptor = (proxy, method, args, handler) -> {
@@ -146,6 +167,7 @@ public class ProxiesTest {
     @Test public void
     beanMappingProxies() {
         Map<String, Object> propertyMap = new HashMap<>();
+        propertyMap.put("id", 1L);
         propertyMap.put("name", "Arthur Putey");
         propertyMap.put("age", 42);
 
@@ -153,6 +175,7 @@ public class ProxiesTest {
         Person proxy2 = Proxies.beanWrapping(Person.class, propertyMap);
 
         assertThat(proxy1, equalTo(proxy2));
+        assertThat(proxy1.getId(), equalTo(1L));
         assertThat(proxy1.getName(), equalTo("Arthur Putey"));
         assertThat(proxy1.getAge(), equalTo(42));
 

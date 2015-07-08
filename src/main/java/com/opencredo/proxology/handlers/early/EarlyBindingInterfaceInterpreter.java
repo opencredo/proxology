@@ -5,51 +5,44 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class EarlyBindingInterfaceInterpreter implements InterfaceInterpreter<Object> {
+public final class EarlyBindingInterfaceInterpreter {
 
-    private static final InterfaceInterpreter<Object> cached = InterfaceInterpreter.caching(
-            new EarlyBindingInterfaceInterpreter());
-
-    public static InterfaceInterpreter<Object> cached() {
-        return cached;
-    }
+    private static final ConcurrentMap<Class<?>, Map<Method, UnboundMethodCallHandler<Object>>> cachedInterfaces =
+            new ConcurrentHashMap<>();
 
     public static UnboundMethodInterpreter<Object> forClasses(Class<?>...classes) {
-        if (classes.length == 0) {
-            throw new IllegalArgumentException("No classes supplied");
-        }
-        UnboundMethodInterpreter<Object> result = cached.interpret(classes[0]);
-        for (int i = 1; i < classes.length; i++) {
-            result = result.orElse(cached.interpret(classes[i]));
-        }
-        return result;
+        return UnboundMethodInterpreter.fromMethodMap(Stream.of(classes)
+                .map(EarlyBindingInterfaceInterpreter::getMethodMap)
+                .flatMap(m -> m.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
-    @Override
-    public UnboundMethodInterpreter<Object> interpret(Class<?> iface) {
-        return UnboundMethodInterpreter.fromMethodMap(getMethodMap(iface));
+    private static Map<Method,UnboundMethodCallHandler<Object>> getMethodMap(Class<?> iface) {
+        return cachedInterfaces.computeIfAbsent(iface, EarlyBindingInterfaceInterpreter::getUncachedMethodMap);
     }
 
-    private Map<Method,UnboundMethodCallHandler<Object>> getMethodMap(Class<?> iface) {
-        return Stream.of(iface.getDeclaredMethods())
+    private static Map<Method,UnboundMethodCallHandler<Object>> getUncachedMethodMap(Class<?> iface) {
+        return Stream.of(iface.getMethods())
                 .filter(m -> Modifier.isPublic(m.getModifiers()) && !m.isDefault() && !Modifier.isStatic(m.getModifiers()))
                 .collect(Collectors.toMap(
                         Function.identity(),
-                        this::getHandler
+                        EarlyBindingInterfaceInterpreter::getHandler
                 ));
     }
 
-    private UnboundMethodCallHandler<Object> getHandler(Method method) {
+    private static UnboundMethodCallHandler<Object> getHandler(Method method) {
         MethodHandle handle = getMethodHandle(method);
 
         return target -> (proxy, args) -> handle.bindTo(target).invokeWithArguments(args);
     }
 
-    private MethodHandle getMethodHandle(Method method) {
+    private static MethodHandle getMethodHandle(Method method) {
         try {
             return MethodHandles.publicLookup().in(method.getDeclaringClass()).unreflect(method);
         } catch (IllegalAccessException e) {

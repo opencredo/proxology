@@ -1,7 +1,6 @@
 package com.opencredo.proxology.proxies;
 
 import com.opencredo.proxology.handlers.*;
-import com.opencredo.proxology.handlers.early.BeanMappingInterfaceInterpreter;
 import com.opencredo.proxology.handlers.early.EarlyBindingInterfaceInterpreter;
 
 import java.lang.reflect.InvocationHandler;
@@ -27,21 +26,16 @@ public final class Proxies {
         return simpleProxy(iface, InvocationHandlers.caching(handler), otherIfaces);
     }
 
-    public static <T> T intercepting(T target, Class<? extends T> iface, MethodCallInterceptor interceptor) {
-        return cachedInterpretingProxy(iface,
+    public static <T> T intercepting(T target, Class<T> iface, MethodCallInterceptor interceptor) {
+        return simpleProxy(iface,
                 InvocationHandlers.intercepting(
                         InvocationHandlers.handlingDefaultMethods(
-                                InvocationHandlers.binding(target)),
-                        interceptor),
-                target.getClass().getInterfaces());
+                                EarlyBindingInterfaceInterpreter.forClasses(iface, Object.class).bind(target)),
+                        interceptor));
     }
 
     public static <T> T beanWrapping(Class<? extends T> iface, Map<String, Object> propertyValues) {
         PropertyValueStore store = new PropertyValueStore(iface, propertyValues);
-        return simpleProxy(iface,
-                EarlyBindingInterfaceInterpreter.forClasses(Object.class, Equalisable.class).bind(store)
-                        .orElse(InvocationHandlers.handlingDefaultMethods(
-                                store.getInvocationHandler(BeanMappingInterfaceInterpreter.getCached()))),
-                Equalisable.class);
+        return simpleProxy(iface, store.createInvocationHandler(), Equalisable.class);
     }
 }
