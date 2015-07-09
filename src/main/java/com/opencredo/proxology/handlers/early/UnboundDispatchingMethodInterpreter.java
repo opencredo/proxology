@@ -12,29 +12,37 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class EarlyBindingInterfaceInterpreter {
+public final class UnboundDispatchingMethodInterpreter {
+
+    private UnboundDispatchingMethodInterpreter() {
+    }
 
     private static final ConcurrentMap<Set<Class<?>>, UnboundMethodInterpreter<Object>> cachedInterfaces =
             new ConcurrentHashMap<>();
 
     public static UnboundMethodInterpreter<Object> forClasses(Class<?>...classes) {
         Set<Class<?>> classSet = Stream.of(classes).collect(Collectors.toSet());
-        return cachedInterfaces.computeIfAbsent(classSet, EarlyBindingInterfaceInterpreter::forClassesUncached);
+        return cachedInterfaces.computeIfAbsent(classSet, UnboundDispatchingMethodInterpreter::forClassesUncached);
     }
+
     private static UnboundMethodInterpreter<Object> forClassesUncached(Set<Class<?>> classes) {
         return UnboundMethodInterpreter.fromMethodMap(classes.stream()
-                .map(EarlyBindingInterfaceInterpreter::getMethodMap)
+                .map(UnboundDispatchingMethodInterpreter::getMethodMap)
                 .flatMap(m -> m.entrySet().stream())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     private static Map<Method,UnboundMethodCallHandler<Object>> getMethodMap(Class<?> iface) {
         return Stream.of(iface.getMethods())
-                .filter(m -> Modifier.isPublic(m.getModifiers()) && !m.isDefault() && !Modifier.isStatic(m.getModifiers()))
+                .filter(UnboundDispatchingMethodInterpreter::isPublicNonDefaultInstanceMethod)
                 .collect(Collectors.toMap(
                         Function.identity(),
-                        EarlyBindingInterfaceInterpreter::getHandler
+                        UnboundDispatchingMethodInterpreter::getHandler
                 ));
+    }
+
+    private static boolean isPublicNonDefaultInstanceMethod(Method m) {
+        return Modifier.isPublic(m.getModifiers()) && !m.isDefault() && !Modifier.isStatic(m.getModifiers());
     }
 
     private static UnboundMethodCallHandler<Object> getHandler(Method method) {

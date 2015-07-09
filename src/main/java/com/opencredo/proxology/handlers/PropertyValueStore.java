@@ -1,7 +1,7 @@
 package com.opencredo.proxology.handlers;
 
-import com.opencredo.proxology.handlers.early.BeanMappingInterfaceInterpreter;
-import com.opencredo.proxology.handlers.early.EarlyBindingInterfaceInterpreter;
+import com.opencredo.proxology.handlers.early.PropertyMappingMethodInterpreter;
+import com.opencredo.proxology.handlers.early.UnboundDispatchingMethodInterpreter;
 
 import java.util.Map;
 
@@ -31,9 +31,9 @@ public class PropertyValueStore implements Equalisable {
     }
 
     public InterpretingInvocationHandler createInvocationHandler() {
-        return EarlyBindingInterfaceInterpreter.forClasses(Object.class, Equalisable.class).bind(this)
+        return UnboundDispatchingMethodInterpreter.forClasses(Object.class, Equalisable.class).bind(this)
             .orElse(InvocationHandlers.handlingDefaultMethods(
-                BeanMappingInterfaceInterpreter.getCached().interpret(forClass).bind(propertyValues)));
+                    PropertyMappingMethodInterpreter.forClass(forClass).bind(propertyValues)));
     }
 
     @Override

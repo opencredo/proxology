@@ -1,7 +1,7 @@
 package com.opencredo.proxology.proxies;
 
 import com.opencredo.proxology.handlers.*;
-import com.opencredo.proxology.handlers.early.EarlyBindingInterfaceInterpreter;
+import com.opencredo.proxology.handlers.early.UnboundDispatchingMethodInterpreter;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -22,15 +22,11 @@ public final class Proxies {
                 handler);
     }
 
-    public static <T> T cachedInterpretingProxy(Class<? extends T> iface, InterpretingInvocationHandler handler, Class<?>...otherIfaces) {
-        return simpleProxy(iface, InvocationHandlers.caching(handler), otherIfaces);
-    }
-
     public static <T> T intercepting(T target, Class<T> iface, MethodCallInterceptor interceptor) {
         return simpleProxy(iface,
                 InvocationHandlers.intercepting(
                         InvocationHandlers.handlingDefaultMethods(
-                                EarlyBindingInterfaceInterpreter.forClasses(iface, Object.class).bind(target)),
+                                UnboundDispatchingMethodInterpreter.forClasses(iface, Object.class).bind(target)),
                         interceptor));
     }
 

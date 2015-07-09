@@ -3,32 +3,37 @@ package com.opencredo.proxology.handlers.early;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class BeanMappingInterfaceInterpreter implements InterfaceInterpreter<Map<String, Object>> {
+public final class PropertyMappingMethodInterpreter {
 
-    private static final InterfaceInterpreter<Map<String, Object>> cached = InterfaceInterpreter.caching(new BeanMappingInterfaceInterpreter());
-
-    public static InterfaceInterpreter<Map<String, Object>> getCached() {
-        return cached;
+    private PropertyMappingMethodInterpreter() {
     }
 
-    @Override
-    public UnboundMethodInterpreter<Map<String, Object>> interpret(Class<?> iface) {
-        return UnboundMethodInterpreter.fromMethodMap(getMethodMap(iface));
+    private static final ConcurrentMap<Class<?>, UnboundMethodInterpreter<Map<String, Object>>> cache =
+            new ConcurrentHashMap<>();
+
+    public static UnboundMethodInterpreter<Map<String, Object>> forClass(Class<?> iface) {
+        return cache.computeIfAbsent(iface, i -> UnboundMethodInterpreter.fromMethodMap(getMethodMap(i)));
     }
 
-    private Map<Method, UnboundMethodCallHandler<Map<String, Object>>> getMethodMap(Class<?> iface) {
+    private static Map<Method, UnboundMethodCallHandler<Map<String, Object>>> getMethodMap(Class<?> iface) {
         return Stream.of(iface.getMethods())
-                .filter(m -> !m.isDefault() && !Modifier.isStatic(m.getModifiers()))
+                .filter(PropertyMappingMethodInterpreter::isNonDefaultInstanceMethod)
                 .collect(Collectors.toMap(
                         Function.identity(),
-                        this::interpretMethod));
+                        PropertyMappingMethodInterpreter::interpretMethod));
     }
 
-    private UnboundMethodCallHandler<Map<String, Object>> interpretMethod(Method method) {
+    private static boolean isNonDefaultInstanceMethod(Method m) {
+        return !m.isDefault() && !Modifier.isStatic(m.getModifiers());
+    }
+
+    private static UnboundMethodCallHandler<Map<String, Object>> interpretMethod(Method method) {
         String methodName = method.getName();
 
         if (methodName.startsWith("is") && method.getParameterCount() == 0) {
@@ -50,11 +55,11 @@ public class BeanMappingInterfaceInterpreter implements InterfaceInterpreter<Map
         return name.substring(prefixLength, prefixLength + 1).toLowerCase() + name.substring(prefixLength + 1);
     }
 
-    private UnboundMethodCallHandler<Map<String, Object>> getterHandler(String propertyName) {
+    private static UnboundMethodCallHandler<Map<String, Object>> getterHandler(String propertyName) {
         return propertyValues -> (proxy, args) -> propertyValues.get(propertyName);
     }
 
-    private UnboundMethodCallHandler<Map<String, Object>> setterHandler(String propertyName) {
+    private static UnboundMethodCallHandler<Map<String, Object>> setterHandler(String propertyName) {
         return propertyValues -> (proxy, args) -> {
             Object value = args[0];
             if (value == null) {
