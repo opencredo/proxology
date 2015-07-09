@@ -17,7 +17,7 @@ public class MagicMatcherTest {
             Map<String, Object> properties = new HashMap<>();
             properties.put("name", name);
             properties.put("age", age);
-            return Proxies.beanWrapping(Person.class, properties);
+            return Proxies.propertyMapping(Person.class, properties);
         }
 
         String getName();

@@ -28,12 +28,11 @@ public final class Proxies {
     public static <T> T intercepting(T target, Class<T> iface, MethodCallInterceptor interceptor) {
         return simpleProxy(iface,
                 InvocationHandlers.intercepting(
-                        InvocationHandlers.handlingDefaultMethods(
-                        InvocationHandlers.binding(target)),
+                        InvocationHandlers.handlingDefaultMethods(InvocationHandlers.binding(target)),
                         interceptor));
     }
 
-    public static <T> T beanWrapping(Class<? extends T> iface, Map<String, Object> propertyValues) {
+    public static <T> T propertyMapping(Class<? extends T> iface, Map<String, Object> propertyValues) {
         PropertyValueStore store = new PropertyValueStore(iface, propertyValues);
         return simpleProxy(iface, store.createInvocationHandler(), Equalisable.class);
     }

@@ -25,7 +25,7 @@ public class PerformanceTest {
 
     interface Person {
         static Person wrapping(Map<String, Object> values) {
-            return Proxies.beanWrapping(Person.class, values);
+            return Proxies.propertyMapping(Person.class, values);
         }
 
         String getName();

@@ -172,8 +172,8 @@ public class ProxiesTest {
         propertyMap.put("name", "Arthur Putey");
         propertyMap.put("age", 42);
 
-        Person proxy1 = Proxies.beanWrapping(Person.class, propertyMap);
-        Person proxy2 = Proxies.beanWrapping(Person.class, propertyMap);
+        Person proxy1 = Proxies.propertyMapping(Person.class, propertyMap);
+        Person proxy2 = Proxies.propertyMapping(Person.class, propertyMap);
 
         assertThat(proxy1, equalTo(proxy2));
         assertThat(proxy1.getId(), equalTo(1L));
