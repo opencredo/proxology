@@ -1,5 +1,7 @@
 package com.opencredo.proxology.handlers;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -12,6 +14,32 @@ public final class InvocationHandlers {
     public static MethodInterpreter caching(MethodInterpreter handler) {
         ConcurrentMap<Method, MethodCallHandler> cache = new ConcurrentHashMap<>();
         return method -> cache.computeIfAbsent(method, handler::interpret);
+    }
+
+    public static MethodInterpreter binding(Object target) {
+        return binding(target, method -> {
+            throw new IllegalStateException(String.format(
+                    "Target class %s does not support method %s",
+                    target.getClass(), method));
+        });
+    }
+
+    public static MethodInterpreter binding(Object target, MethodInterpreter unboundHandler) {
+        return method -> {
+            if (method.getDeclaringClass().isAssignableFrom(target.getClass())) {
+                MethodHandle handle = getMethodHandle(method, target);
+                return (proxy, args) -> handle.invokeWithArguments(args);
+            }
+            return unboundHandler.interpret(method);
+        };
+    }
+
+    private static MethodHandle getMethodHandle(Method method, Object target) {
+        try {
+            return MethodHandles.publicLookup().in(target.getClass()).unreflect(method).bindTo(target);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static MethodInterpreter intercepting(MethodInterpreter handler,

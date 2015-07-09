@@ -4,7 +4,6 @@ import com.opencredo.proxology.handlers.Equalisable;
 import com.opencredo.proxology.handlers.InvocationHandlers;
 import com.opencredo.proxology.handlers.MethodCallInterceptor;
 import com.opencredo.proxology.handlers.PropertyValueStore;
-import com.opencredo.proxology.handlers.early.UnboundDispatchingMethodInterpreter;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -30,7 +29,7 @@ public final class Proxies {
         return simpleProxy(iface,
                 InvocationHandlers.intercepting(
                         InvocationHandlers.handlingDefaultMethods(
-                                UnboundDispatchingMethodInterpreter.forClasses(iface, Object.class).bind(target)),
+                        InvocationHandlers.binding(target)),
                         interceptor));
     }
 

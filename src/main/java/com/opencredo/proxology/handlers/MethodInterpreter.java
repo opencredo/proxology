@@ -13,13 +13,4 @@ public interface MethodInterpreter extends InvocationHandler {
     }
 
     MethodCallHandler interpret(Method method);
-
-    default MethodInterpreter orElse(MethodInterpreter next) {
-        return method -> {
-            MethodCallHandler handler = interpret(method);
-            return handler == null
-                    ? next.interpret(method)
-                    : handler;
-        };
-    }
 }

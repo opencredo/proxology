@@ -15,9 +15,6 @@ public interface UnboundMethodInterpreter<S> {
     UnboundMethodCallHandler<S> interpret(Method method);
 
     default MethodInterpreter bind(S state) {
-        return method -> {
-            UnboundMethodCallHandler<S> handler = interpret(method);
-            return handler == null ? null : handler.bind(state);
-        };
+        return method -> interpret(method).bind(state);
     }
 }

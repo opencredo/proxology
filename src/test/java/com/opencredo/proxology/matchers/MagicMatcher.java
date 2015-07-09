@@ -1,10 +1,9 @@
 package com.opencredo.proxology.matchers;
 
 import com.opencredo.proxology.handlers.InvocationHandlers;
-import com.opencredo.proxology.handlers.MethodCallHandler;
 import com.opencredo.proxology.handlers.MethodInterpreter;
-import com.opencredo.proxology.handlers.early.UnboundDispatchingMethodInterpreter;
 import com.opencredo.proxology.proxies.Proxies;
+import com.opencredo.proxology.utils.Unsafely;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -19,15 +18,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class MagicMatcher<S> extends TypeSafeDiagnosingMatcher<S> implements MethodInterpreter {
+public class MagicMatcher<S> extends TypeSafeDiagnosingMatcher<S> {
 
     public static <S, T extends Matcher<S>> T proxying(Class<T> proxyClass) {
-        MagicMatcher<S> magicMatcher = new MagicMatcher<>();
         return Proxies.simpleProxy(
                 proxyClass,
-                InvocationHandlers.handlingDefaultMethods(
-                        UnboundDispatchingMethodInterpreter.forClasses(Object.class, Matcher.class).bind(magicMatcher))
-                        .orElse(magicMatcher)
+                new MagicMatcher<>().getInvocationHandler()
                 );
     }
 
@@ -59,31 +55,11 @@ public class MagicMatcher<S> extends TypeSafeDiagnosingMatcher<S> implements Met
         return matched;
     }
 
-    private interface Unsafely<T> {
-        static <T> T invoke(Unsafely<T> f) {
-            try {
-                return f.run();
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        T run() throws Throwable;
-    }
-
     @Override
     public void describeTo(Description description) {
         propertyMatchers.entrySet().forEach(entry -> {
             description.appendText("\n").appendText(entry.getKey()).appendText(": ").appendDescriptionOf(entry.getValue());
         });
-    }
-
-    @Override
-    public MethodCallHandler interpret(Method method) {
-        return (proxy, args) -> {
-            propertyMatchers.put(getPropertyName(method.getName()), getMatcher(args[0]));
-            return proxy;
-        };
     }
 
     private String getPropertyName(String methodName) {
@@ -96,4 +72,14 @@ public class MagicMatcher<S> extends TypeSafeDiagnosingMatcher<S> implements Met
         }
         return Matchers.equalTo(arg);
     }
+
+    public MethodInterpreter getInvocationHandler() {
+        return InvocationHandlers.handlingDefaultMethods(
+                InvocationHandlers.binding(this, method -> (proxy, args) -> {
+                                    propertyMatchers.put(getPropertyName(method.getName()), getMatcher(args[0]));
+                                    return proxy;
+                                }
+                        ));
+    }
+
 }
