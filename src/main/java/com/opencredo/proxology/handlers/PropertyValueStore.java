@@ -30,7 +30,7 @@ public class PropertyValueStore implements Equalisable {
         return isEqualTo(iface, o);
     }
 
-    public InterpretingInvocationHandler createInvocationHandler() {
+    public MethodInterpreter createInvocationHandler() {
         return UnboundDispatchingMethodInterpreter.forClasses(Object.class, Equalisable.class).bind(this)
             .orElse(InvocationHandlers.handlingDefaultMethods(
                     PropertyMappingMethodInterpreter.forClass(iface).bind(propertyValues)));

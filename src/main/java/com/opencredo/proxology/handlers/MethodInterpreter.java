@@ -4,7 +4,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 @FunctionalInterface
-public interface InterpretingInvocationHandler extends InvocationHandler {
+public interface MethodInterpreter extends InvocationHandler {
 
     @Override
     default Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -14,7 +14,7 @@ public interface InterpretingInvocationHandler extends InvocationHandler {
 
     MethodCallHandler interpret(Method method);
 
-    default InterpretingInvocationHandler orElse(InterpretingInvocationHandler next) {
+    default MethodInterpreter orElse(MethodInterpreter next) {
         return method -> {
             MethodCallHandler handler = interpret(method);
             return handler == null

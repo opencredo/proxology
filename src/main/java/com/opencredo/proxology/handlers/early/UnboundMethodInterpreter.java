@@ -1,6 +1,6 @@
 package com.opencredo.proxology.handlers.early;
 
-import com.opencredo.proxology.handlers.InterpretingInvocationHandler;
+import com.opencredo.proxology.handlers.MethodInterpreter;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -14,7 +14,7 @@ public interface UnboundMethodInterpreter<S> {
 
     UnboundMethodCallHandler<S> interpret(Method method);
 
-    default InterpretingInvocationHandler bind(S state) {
+    default MethodInterpreter bind(S state) {
         return method -> {
             UnboundMethodCallHandler<S> handler = interpret(method);
             return handler == null ? null : handler.bind(state);

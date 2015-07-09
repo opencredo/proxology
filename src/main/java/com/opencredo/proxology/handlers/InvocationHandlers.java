@@ -9,12 +9,12 @@ public final class InvocationHandlers {
     private InvocationHandlers() {
     }
 
-    public static InterpretingInvocationHandler caching(InterpretingInvocationHandler handler) {
+    public static MethodInterpreter caching(MethodInterpreter handler) {
         ConcurrentMap<Method, MethodCallHandler> cache = new ConcurrentHashMap<>();
         return method -> cache.computeIfAbsent(method, handler::interpret);
     }
 
-    public static InterpretingInvocationHandler intercepting(InterpretingInvocationHandler handler,
+    public static MethodInterpreter intercepting(MethodInterpreter handler,
                                                              MethodCallInterceptor interceptor) {
         return method -> {
             MethodCallHandler methodCallHandler = handler.interpret(method);
@@ -22,7 +22,7 @@ public final class InvocationHandlers {
         };
     }
 
-    public static InterpretingInvocationHandler handlingDefaultMethods(InterpretingInvocationHandler handler) {
+    public static MethodInterpreter handlingDefaultMethods(MethodInterpreter handler) {
         return method -> method.isDefault() ? DefaultMethodCallHandler.forMethod(method) : handler.interpret(method);
     }
 
