@@ -7,11 +7,11 @@ import java.util.Map;
 
 public class PropertyValueStore implements Equalisable {
 
-    private final Class<?> forClass;
+    private final Class<?> iface;
     private final Map<String, Object> propertyValues;
 
-    public PropertyValueStore(Class<?> forClass, Map<String, Object> propertyValues) {
-        this.forClass = forClass;
+    public PropertyValueStore(Class<?> iface, Map<String, Object> propertyValues) {
+        this.iface = iface;
         this.propertyValues = propertyValues;
     }
 
@@ -22,18 +22,18 @@ public class PropertyValueStore implements Equalisable {
 
     @Override
     public String toString() {
-        return String.format("%s %s", forClass, propertyValues);
+        return String.format("%s %s", iface, propertyValues);
     }
 
     @Override
     public boolean equals(Object o) {
-        return isEqualTo(forClass, o);
+        return isEqualTo(iface, o);
     }
 
     public InterpretingInvocationHandler createInvocationHandler() {
         return UnboundDispatchingMethodInterpreter.forClasses(Object.class, Equalisable.class).bind(this)
             .orElse(InvocationHandlers.handlingDefaultMethods(
-                    PropertyMappingMethodInterpreter.forClass(forClass).bind(propertyValues)));
+                    PropertyMappingMethodInterpreter.forClass(iface).bind(propertyValues)));
     }
 
     @Override

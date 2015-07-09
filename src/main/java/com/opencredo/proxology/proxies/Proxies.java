@@ -1,24 +1,28 @@
 package com.opencredo.proxology.proxies;
 
-import com.opencredo.proxology.handlers.*;
+import com.opencredo.proxology.handlers.Equalisable;
+import com.opencredo.proxology.handlers.InvocationHandlers;
+import com.opencredo.proxology.handlers.MethodCallInterceptor;
+import com.opencredo.proxology.handlers.PropertyValueStore;
 import com.opencredo.proxology.handlers.early.UnboundDispatchingMethodInterpreter;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.Set;
 
 public final class Proxies {
 
+    @SuppressWarnings("unchecked")
     public static <T> T simpleProxy(Class<? extends T> iface, InvocationHandler handler, Class<?>...otherIfaces) {
-        Class<?>[] allInterfaces = Stream.concat(
-                Stream.of(iface),
-                Stream.of(otherIfaces)
-                        .filter(i -> !i.equals(iface)))
-                .toArray(Class<?>[]::new);
+        Set<Class<?>> allInterfaces = new HashSet<>();
+        allInterfaces.add(iface);
+        allInterfaces.addAll(Arrays.asList(otherIfaces));
 
         return (T) Proxy.newProxyInstance(iface.getClassLoader(),
-                allInterfaces,
+                allInterfaces.stream().toArray(Class<?>[]::new),
                 handler);
     }
 

@@ -123,6 +123,7 @@ public class ProxiesTest {
                 "display: null -> Arthur Putey (42)"));
     }
 
+    @SuppressWarnings("unchecked")
     @Test public void
     handlesObjectMethods() {
         Person instance1 = new PersonImpl(1, "Arthur Putey", 42);
