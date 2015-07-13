@@ -1,7 +1,5 @@
 package com.opencredo.proxology.handlers;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -11,9 +9,9 @@ public final class InvocationHandlers {
     private InvocationHandlers() {
     }
 
-    public static MethodInterpreter caching(MethodInterpreter handler) {
+    public static MethodInterpreter caching(MethodInterpreter interpreter) {
         ConcurrentMap<Method, MethodCallHandler> cache = new ConcurrentHashMap<>();
-        return method -> cache.computeIfAbsent(method, handler::interpret);
+        return method -> cache.computeIfAbsent(method, interpreter::interpret);
     }
 
     public static MethodInterpreter binding(Object target) {
@@ -24,34 +22,24 @@ public final class InvocationHandlers {
         });
     }
 
-    public static MethodInterpreter binding(Object target, MethodInterpreter unboundHandler) {
+    public static MethodInterpreter binding(Object target, MethodInterpreter unboundInterpreter) {
         return method -> {
             if (method.getDeclaringClass().isAssignableFrom(target.getClass())) {
-                MethodHandle handle = getMethodHandle(method, target);
-                return (proxy, args) -> handle.invokeWithArguments(args);
+                return (proxy, args) -> method.invoke(target, args);
             }
-            return unboundHandler.interpret(method);
+            return unboundInterpreter.interpret(method);
         };
     }
 
-    private static MethodHandle getMethodHandle(Method method, Object target) {
-        try {
-            return MethodHandles.publicLookup().in(target.getClass()).unreflect(method).bindTo(target);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+    public static MethodInterpreter intercepting(MethodInterpreter interpreter,
+                                                 MethodCallInterceptor interceptor) {
+        return method -> interceptor.intercepting(method, interpreter.interpret(method));
     }
 
-    public static MethodInterpreter intercepting(MethodInterpreter handler,
-                                                             MethodCallInterceptor interceptor) {
-        return method -> {
-            MethodCallHandler methodCallHandler = handler.interpret(method);
-            return methodCallHandler == null ? null : interceptor.intercepting(method, methodCallHandler);
-        };
-    }
-
-    public static MethodInterpreter handlingDefaultMethods(MethodInterpreter handler) {
-        return method -> method.isDefault() ? DefaultMethodCallHandler.forMethod(method) : handler.interpret(method);
+    public static MethodInterpreter handlingDefaultMethods(MethodInterpreter nonDefaultInterpreter) {
+        return method -> method.isDefault()
+                ? DefaultMethodCallHandler.forMethod(method)
+                : nonDefaultInterpreter.interpret(method);
     }
 
 }

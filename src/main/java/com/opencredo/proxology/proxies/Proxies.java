@@ -36,4 +36,5 @@ public final class Proxies {
         PropertyValueStore store = new PropertyValueStore(iface, propertyValues);
         return simpleProxy(iface, store.createInvocationHandler(), Equalisable.class);
     }
+
 }
