@@ -24,13 +24,13 @@ public class PassthroughInvocationHandlerPerformanceTest {
             PassthroughInvocationHandler.proxying(concreteInstance, RandomNumberGenerator.class);
 
     @Test
-    @PerfTest(invocations = 1000, warmUp = 200)
+    @PerfTest(invocations = 1000, warmUp = 1000)
     public void invokeConcrete() {
         getAMillionRandomLongs(concreteInstance);
     }
 
     @Test
-    @PerfTest(invocations = 1000, warmUp = 200)
+    @PerfTest(invocations = 1000, warmUp = 1000)
     public void invokeProxied() {
         getAMillionRandomLongs(proxiedInstance);
     }

@@ -1,10 +1,14 @@
 package com.opencredo.proxology.handlers;
 
-import com.opencredo.proxology.handlers.early.PropertyMappingMethodInterpreter;
+import com.opencredo.proxology.handlers.early.PropertyMappingClassInterpreter;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
-public class PropertyValueStore implements Equalisable {
+import static com.opencredo.proxology.handlers.InvocationHandlers.binding;
+import static com.opencredo.proxology.handlers.InvocationHandlers.handlingDefaultMethods;
+
+public class PropertyValueStore implements Equalisable, Supplier<Map<String, Object>> {
 
     private final Class<?> iface;
     private final Map<String, Object> propertyValues;
@@ -30,13 +34,18 @@ public class PropertyValueStore implements Equalisable {
     }
 
     public MethodInterpreter createInvocationHandler() {
-        return InvocationHandlers.binding(this,
-                InvocationHandlers.handlingDefaultMethods(
-                    PropertyMappingMethodInterpreter.forClass(iface).bind(propertyValues)));
+        return binding(this,
+                handlingDefaultMethods(
+                        PropertyMappingClassInterpreter.interpret(iface).bind(propertyValues)));
     }
 
     @Override
     public Object getState() {
+        return propertyValues;
+    }
+
+    @Override
+    public Map<String, Object> get() {
         return propertyValues;
     }
 }

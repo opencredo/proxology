@@ -107,7 +107,7 @@ public class ProxiesTest {
             return result;
         };
 
-        Person proxy = Proxies.intercepting(instance, Person.class, interceptor);
+        Person proxy = Proxies.interceptingProxy(instance, Person.class, interceptor);
         proxy.setId(13);
         proxy.setName("Arthur Putey");
         proxy.setAge(42);
@@ -136,7 +136,7 @@ public class ProxiesTest {
             return result;
         };
 
-        Person proxy = Proxies.intercepting(instance1, Person.class, interceptor);
+        Person proxy = Proxies.interceptingProxy(instance1, Person.class, interceptor);
 
         assertThat(proxy, equalTo(instance2));
         assertThat(proxy.hashCode(), equalTo(instance2.hashCode()));
@@ -157,7 +157,7 @@ public class ProxiesTest {
             return result;
         };
 
-        Person proxy1 = Proxies.intercepting(instance1, Person.class, interceptor);
+        Person proxy1 = Proxies.interceptingProxy(instance1, Person.class, interceptor);
 
         assertThat(proxy1, equalTo(instance1));
         assertThat(instance1, equalTo(proxy1));
