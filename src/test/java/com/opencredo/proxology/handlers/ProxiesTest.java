@@ -10,12 +10,9 @@ import static org.hamcrest.Matchers.*;
 
 public class ProxiesTest {
 
-    public interface Entity {
+    public interface Person {
         long getId();
         void setId(long id);
-    }
-
-    public interface Person extends Entity {
         String getName();
         void setName(String name);
         int getAge();

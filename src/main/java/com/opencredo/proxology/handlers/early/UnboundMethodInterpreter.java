@@ -3,13 +3,18 @@ package com.opencredo.proxology.handlers.early;
 import com.opencredo.proxology.handlers.MethodInterpreter;
 
 import java.lang.reflect.Method;
-import java.util.Map;
+import java.util.function.Predicate;
 
 @FunctionalInterface
 public interface UnboundMethodInterpreter<S> {
 
-    static <S> UnboundMethodInterpreter<S> fromMethodMap(Map<Method, UnboundMethodCallHandler<S>> methodMap) {
-        return methodMap::get;
+    static <S> UnboundMethodInterpreter<S> matching(
+            Predicate<Method> selector,
+            UnboundMethodInterpreter<S> matchedInterpreter,
+            UnboundMethodInterpreter<S> unmatchedInterpreter) {
+        return method -> selector.test(method)
+                ? matchedInterpreter.interpret(method)
+                : unmatchedInterpreter.interpret(method);
     }
 
     UnboundMethodCallHandler<S> interpret(Method method);
