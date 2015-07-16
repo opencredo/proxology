@@ -2,9 +2,8 @@ package com.opencredo.proxology.builders;
 
 import com.opencredo.proxology.handlers.MethodInterpreter;
 import com.opencredo.proxology.proxies.Proxies;
+import com.opencredo.proxology.reflection.TypeInfo;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -23,13 +22,9 @@ public final class TemplateValueStore<V, B extends Supplier<V>, T extends Templa
 
     public static <V, B extends Supplier<V>, T extends Template<V, B>> B createBuilder(Class<T> templateClass) {
         TemplateValueStore<V, B, T> valueStore = new TemplateValueStore<>(templateClass);
-        Class<B> builderClass = getBuilderClass(templateClass);
-        return Proxies.simpleProxy(builderClass, valueStore.getMethodInterpreter(builderClass));
-    }
+        Class<B> builderClass = TypeInfo.forType(templateClass).getInterface(Template.class).getSecondTypeArgument().getRawType();
 
-    private static <B> Class<B> getBuilderClass(Class<?> templateClass) {
-        Type secondTypeArgument = ((ParameterizedType) templateClass.getGenericInterfaces()[0]).getActualTypeArguments()[1];
-        return (Class<B>) secondTypeArgument;
+        return Proxies.simpleProxy(builderClass, valueStore.getMethodInterpreter(builderClass));
     }
 
     public MethodInterpreter getMethodInterpreter(Class<B> builderClass) {

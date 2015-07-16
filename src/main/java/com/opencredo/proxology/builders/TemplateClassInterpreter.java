@@ -1,11 +1,12 @@
 package com.opencredo.proxology.builders;
 
+import com.opencredo.proxology.arguments.ArgumentConversion;
 import com.opencredo.proxology.handlers.early.ClassInterpreter;
 import com.opencredo.proxology.handlers.early.UnboundMethodCallHandler;
 import com.opencredo.proxology.handlers.early.UnboundMethodInterpreter;
+import com.opencredo.proxology.methods.MethodInfo;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Map;
 
 public final class TemplateClassInterpreter {
@@ -18,16 +19,11 @@ public final class TemplateClassInterpreter {
     }
 
     private static UnboundMethodCallHandler<Map<String, Object>> interpret(Method method) {
-        String methodName = method.getName();
-        String propertyName = methodName.substring(3, 4).toLowerCase() + methodName.substring(4);
-        return state -> (proxy, args) -> state.getOrDefault(propertyName, interpret(args[0]));
-    }
-
-    private static Object interpret(Object arg) {
-        if (arg.getClass().isArray()) {
-            return Arrays.asList(((Object[]) arg));
-        }
-        return arg;
+        MethodInfo methodInfo = MethodInfo.forMethod(method);
+        String propertyName = methodInfo.getPropertyName();
+        return state -> (proxy, args) -> ArgumentConversion.convert(
+                methodInfo.getReturnType(),
+                state.getOrDefault(propertyName, args[0]));
     }
 
 }

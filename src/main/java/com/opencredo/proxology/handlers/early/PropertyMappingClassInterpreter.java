@@ -1,5 +1,7 @@
 package com.opencredo.proxology.handlers.early;
 
+import com.opencredo.proxology.methods.MethodInfo;
+
 import java.lang.reflect.Method;
 import java.util.Map;
 
@@ -16,35 +18,16 @@ public final class PropertyMappingClassInterpreter {
     }
 
     private static UnboundMethodCallHandler<Map<String, Object>> interpret(Method method) {
-        String methodName = method.getName();
+        MethodInfo info = MethodInfo.forMethod(method);
 
-        if (hasGetterSignature(method)) {
-            if (methodName.startsWith("is")) {
-                return getterHandler(removePrefix(methodName, 2));
-            }
-
-            if (methodName.startsWith("get")) {
-                return getterHandler(removePrefix(methodName, 3));
-            }
+        if (info.isGetter()) {
+            return getterHandler(info.getPropertyName());
         }
-
-        if (hasSetterSignature(method) && methodName.startsWith("set")) {
-            return setterHandler(removePrefix(methodName, 3));
+        if (info.isSetter()) {
+            return setterHandler(info.getPropertyName());
         }
 
         throw new IllegalArgumentException(String.format("Method %s is neither a getter nor a setter method", method));
-    }
-
-    private static boolean hasGetterSignature(Method method) {
-        return method.getParameterCount() == 0 && !method.getReturnType().equals(void.class);
-    }
-
-    private static boolean hasSetterSignature(Method method) {
-        return method.getParameterCount() == 1 && method.getReturnType().equals(void.class);
-    }
-
-    private static String removePrefix(String name, int prefixLength) {
-        return name.substring(prefixLength, prefixLength + 1).toLowerCase() + name.substring(prefixLength + 1);
     }
 
     private static UnboundMethodCallHandler<Map<String, Object>> getterHandler(String propertyName) {

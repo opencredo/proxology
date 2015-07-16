@@ -3,7 +3,6 @@ package com.opencredo.proxology.handlers;
 import com.opencredo.proxology.proxies.Proxies;
 import org.databene.contiperf.PerfTest;
 import org.databene.contiperf.junit.ContiPerfRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -13,7 +12,7 @@ import java.util.Map;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 
-@Ignore
+//@Ignore
 public class PerformanceTest {
 
     private static final Map<String, Object> map1 = initialiseMap();
