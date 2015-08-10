@@ -1,7 +1,5 @@
 package com.opencredo.proxology.reflection;
 
-import com.opencredo.proxology.methods.MethodInfo;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;

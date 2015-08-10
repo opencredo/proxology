@@ -1,6 +1,6 @@
 package com.opencredo.proxology.handlers.early;
 
-import com.opencredo.proxology.methods.MethodInfo;
+import com.opencredo.proxology.reflection.MethodInfo;
 
 import java.lang.reflect.Method;
 import java.util.Map;

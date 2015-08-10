@@ -4,7 +4,7 @@ import com.opencredo.proxology.handlers.MethodInterpreter;
 import com.opencredo.proxology.handlers.early.ClassInterpreter;
 import com.opencredo.proxology.handlers.early.UnboundMethodInterpreter;
 import com.opencredo.proxology.memoization.Memoizer;
-import com.opencredo.proxology.methods.MethodInfo;
+import com.opencredo.proxology.reflection.MethodInfo;
 import com.opencredo.proxology.utils.Nonchalantly;
 
 import java.beans.BeanInfo;

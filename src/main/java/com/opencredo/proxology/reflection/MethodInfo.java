@@ -1,6 +1,4 @@
-package com.opencredo.proxology.methods;
-
-import com.opencredo.proxology.reflection.TypeInfo;
+package com.opencredo.proxology.reflection;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
