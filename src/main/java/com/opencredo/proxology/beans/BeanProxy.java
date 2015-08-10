@@ -3,7 +3,10 @@ package com.opencredo.proxology.beans;
 import com.opencredo.proxology.proxies.Proxies;
 import com.opencredo.proxology.utils.EqualisableByState;
 
-public interface BeanProxy {
+public final class BeanProxy {
+
+    private BeanProxy() {
+    }
 
     static <T> T proxying(Class<T> proxyClass) {
         BeanProxySchema schema = BeanProxySchema.forClass(proxyClass);
