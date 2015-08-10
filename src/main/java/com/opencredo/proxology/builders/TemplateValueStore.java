@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static com.opencredo.proxology.handlers.InvocationHandlers.binding;
-import static com.opencredo.proxology.handlers.InvocationHandlers.handlingDefaultMethods;
+import static com.opencredo.proxology.handlers.MethodInterpreters.binding;
+import static com.opencredo.proxology.handlers.MethodInterpreters.handlingDefaultMethods;
 
 public final class TemplateValueStore<V, B extends Supplier<V>, T extends Template<V, B>> implements Supplier<V> {
 

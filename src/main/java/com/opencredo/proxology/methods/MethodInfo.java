@@ -46,22 +46,26 @@ public class MethodInfo {
     }
 
     public static MethodInfo forMethod(Method method) {
+        return forMethod(method, TypeInfo.forType(method.getDeclaringClass()));
+    }
+
+    public static MethodInfo forMethod(Method method, TypeInfo declaringType) {
         String methodName = method.getName();
 
-        return new MethodInfo(method, methodName, method.getDeclaringClass(), Prefix.forMethodName(methodName));
+        return new MethodInfo(method, methodName, declaringType, Prefix.forMethodName(methodName));
     }
 
 
-    public MethodInfo(Method method, String methodName, Class<?> declaringClass, Prefix prefix) {
+    public MethodInfo(Method method, String methodName, TypeInfo declaringType, Prefix prefix) {
         this.method = method;
         this.methodName = methodName;
-        this.declaringClass = declaringClass;
+        this.declaringType = declaringType;
         this.prefix = prefix;
     }
 
     private final Method method;
     private final String methodName;
-    private final Class<?> declaringClass;
+    private final TypeInfo declaringType;
     private final Prefix prefix;
 
     public boolean isGetter() {
@@ -98,5 +102,9 @@ public class MethodInfo {
 
     public Method getMethod() {
         return method;
+    }
+
+    public TypeInfo getDeclaringType() {
+        return declaringType;
     }
 }

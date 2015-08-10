@@ -1,9 +1,9 @@
 package com.opencredo.proxology.matchers;
 
-import com.opencredo.proxology.handlers.InvocationHandlers;
+import com.opencredo.proxology.handlers.MethodInterpreters;
 import com.opencredo.proxology.handlers.MethodInterpreter;
 import com.opencredo.proxology.proxies.Proxies;
-import com.opencredo.proxology.utils.Unsafely;
+import com.opencredo.proxology.utils.Nonchalantly;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -31,7 +31,7 @@ public class MagicMatcher<S> extends TypeSafeDiagnosingMatcher<S> {
 
     @Override
     protected boolean matchesSafely(S item, Description description) {
-        BeanInfo info = Unsafely.invoke(() -> Introspector.getBeanInfo(item.getClass()));
+        BeanInfo info = Nonchalantly.invoke(() -> Introspector.getBeanInfo(item.getClass()));
         Map<String, Method> propertyMap = Stream.of(info.getPropertyDescriptors()).collect(Collectors.toMap(PropertyDescriptor::getName, PropertyDescriptor::getReadMethod));
 
         boolean matched = true;
@@ -43,7 +43,7 @@ public class MagicMatcher<S> extends TypeSafeDiagnosingMatcher<S> {
                 continue;
             }
 
-            Object propertyValue = Unsafely.invoke(() -> getter.invoke(item));
+            Object propertyValue = Nonchalantly.invoke(() -> getter.invoke(item));
             if (!propertyMatcher.getValue().matches(propertyValue)) {
                 matched = false;
                 propertyMatcher.getValue().describeMismatch(
@@ -74,12 +74,12 @@ public class MagicMatcher<S> extends TypeSafeDiagnosingMatcher<S> {
     }
 
     public MethodInterpreter getInvocationHandler() {
-        return InvocationHandlers.handlingDefaultMethods(
-                InvocationHandlers.binding(this, method -> (proxy, args) -> {
-                                    propertyMatchers.put(getPropertyName(method.getName()), getMatcher(args[0]));
-                                    return proxy;
-                                }
-                        ));
+        return MethodInterpreters.handlingDefaultMethods(
+                MethodInterpreters.binding(this, method -> (proxy, args) -> {
+                            propertyMatchers.put(getPropertyName(method.getName()), getMatcher(args[0]));
+                            return proxy;
+                        }
+                ));
     }
 
 }

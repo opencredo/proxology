@@ -1,7 +1,7 @@
 package com.opencredo.proxology.utils;
 
-public interface Unsafely<T> {
-    static <T> T invoke(Unsafely<T> f) {
+public interface Nonchalantly<T> {
+    static <T> T invoke(Nonchalantly<T> f) {
         try {
             return f.run();
         } catch (Throwable e) {

@@ -71,7 +71,7 @@ public class TypeInfo {
     }
 
     public Stream<MethodInfo> streamDeclaredMethods() {
-        return Stream.of(getRawType().getDeclaredMethods()).map(MethodInfo::forMethod);
+        return Stream.of(getRawType().getDeclaredMethods()).map(method -> MethodInfo.forMethod(method, this));
     }
 
     public TypeInfo getArrayComponentType() {

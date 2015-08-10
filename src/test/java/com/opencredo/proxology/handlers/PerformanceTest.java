@@ -1,9 +1,9 @@
 package com.opencredo.proxology.handlers;
 
+import com.opencredo.proxology.beans.BeanProxy;
 import com.opencredo.proxology.proxies.Proxies;
 import org.databene.contiperf.PerfTest;
 import org.databene.contiperf.junit.ContiPerfRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -13,13 +13,15 @@ import java.util.Map;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 
-@Ignore
+//@Ignore
 public class PerformanceTest {
 
     private static final Map<String, Object> map1 = initialiseMap();
     private static final Map<String, Object> map2 = initialiseMap();
-    private static final Person person1 = Person.wrapping(initialiseMap());
-    private static final Person person2 = Person.wrapping(initialiseMap());
+    private static final Person wrappingProxy1 = Person.wrapping(initialiseMap());
+    private static final Person wrappingProxy2 = Person.wrapping(initialiseMap());
+    private static final Person beanProxy1 = Person.create("Arthur Putey", 42);
+    private static final Person beanProxy2 = Person.create("Arthur Putey", 42);
 
     @Rule
     public final ContiPerfRule rule = new ContiPerfRule();
@@ -29,8 +31,18 @@ public class PerformanceTest {
             return Proxies.propertyMapping(Person.class, values);
         }
 
+        static Person create(String name, int age) {
+            Person person = BeanProxy.proxying(Person.class);
+            person.setName(name);
+            person.setAge(age);
+            return person;
+        }
+
         String getName();
+        void setName(String name);
+
         int getAge();
+        void setAge(int age);
     }
 
     @Test
@@ -46,10 +58,10 @@ public class PerformanceTest {
 
     @Test
     @PerfTest(invocations=1000, warmUp=200)
-    public void readFromProxy() {
+    public void readFromWrappingProxy() {
         for (int i=0; i < 100000; i++) {
-            String name = person1.getName();
-            int age = person1.getAge();
+            String name = wrappingProxy1.getName();
+            int age = wrappingProxy1.getAge();
             assertEquals(name, "Arthur Putey");
             assertEquals(age, 42);
         }
@@ -65,6 +77,22 @@ public class PerformanceTest {
 
     @Test
     @PerfTest(invocations=1000, warmUp=200)
+    public void beanProxyEquality() {
+        for (int i=0; i < 10000; i++) {
+            assertEquals(beanProxy1, beanProxy2);
+        }
+    }
+
+    @Test
+    @PerfTest(invocations=1000, warmUp=200)
+    public void wrappingProxyEquality() {
+        for (int i=0; i < 10000; i++) {
+            assertEquals(wrappingProxy1, wrappingProxy2);
+        }
+    }
+
+    @Test
+    @PerfTest(invocations=1000, warmUp=200)
     public void mapInitialisation() {
         for (int i=0; i < 10000; i++) {
             assertNotNull(initialiseMap());
@@ -73,7 +101,7 @@ public class PerformanceTest {
 
     @Test
     @PerfTest(invocations=1000, warmUp=200)
-    public void proxyInitialisation() {
+    public void wrappingProxyInitialisation() {
         for (int i=0; i < 10000; i++) {
             assertNotNull(Person.wrapping(initialiseMap()));
         }
@@ -81,9 +109,9 @@ public class PerformanceTest {
 
     @Test
     @PerfTest(invocations=1000, warmUp=200)
-    public void proxyEquality() {
+    public void beanProxyInitialisation() {
         for (int i=0; i < 10000; i++) {
-            assertEquals(person1, person2);
+            assertNotNull(Person.create("Arthur Putey", 42));
         }
     }
 
