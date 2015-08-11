@@ -8,7 +8,7 @@ public final class BeanProxy {
     private BeanProxy() {
     }
 
-    static <T> T proxying(Class<T> proxyClass) {
+    public static <T> T proxying(Class<T> proxyClass) {
         BeanProxySchema schema = BeanProxySchema.forClass(proxyClass);
         BeanProxyStorage storage = schema.createStorage();
 
