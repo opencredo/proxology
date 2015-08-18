@@ -72,6 +72,10 @@ public class TypeInfo {
         return Stream.of(getRawType().getDeclaredMethods()).map(method -> MethodInfo.forMethod(method, this));
     }
 
+    public Stream<MethodInfo> streamNonDefaultPublicInstanceMethods() {
+        return streamDeclaredMethods().filter(m -> !m.isDefault() && !m.isStatic());
+    }
+
     public TypeInfo getArrayComponentType() {
         return TypeInfo.forType(getRawType().getComponentType());
     }

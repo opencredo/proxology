@@ -4,7 +4,6 @@ import com.opencredo.proxology.beans.BeanProxy;
 import com.opencredo.proxology.proxies.Proxies;
 import org.databene.contiperf.PerfTest;
 import org.databene.contiperf.junit.ContiPerfRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -14,7 +13,7 @@ import java.util.Map;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 
-@Ignore
+//@Ignore
 public class PerformanceTest {
 
     private static final Map<String, Object> map1 = initialiseMap();
@@ -63,6 +62,17 @@ public class PerformanceTest {
         for (int i=0; i < 100000; i++) {
             String name = wrappingProxy1.getName();
             int age = wrappingProxy1.getAge();
+            assertEquals(name, "Arthur Putey");
+            assertEquals(age, 42);
+        }
+    }
+
+    @Test
+    @PerfTest(invocations=1000, warmUp=200)
+    public void readFromBeanProxy() {
+        for (int i=0; i < 100000; i++) {
+            String name = beanProxy1.getName();
+            int age = beanProxy1.getAge();
             assertEquals(name, "Arthur Putey");
             assertEquals(age, 42);
         }

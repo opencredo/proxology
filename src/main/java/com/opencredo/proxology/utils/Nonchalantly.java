@@ -1,13 +1,15 @@
 package com.opencredo.proxology.utils;
 
-public interface Nonchalantly<T> {
-    static <T, E extends Throwable> T invoke(Nonchalantly<T> f) throws E {
+public final class Nonchalantly {
+
+    private Nonchalantly() {
+    }
+
+    public static <T, E extends Throwable> T invoke(FallibleSupplier<T> f) throws E {
         try {
-            return f.run();
+            return f.get();
         } catch (Throwable e) {
             throw (E) e;
         }
     }
-
-    T run() throws Throwable;
 }

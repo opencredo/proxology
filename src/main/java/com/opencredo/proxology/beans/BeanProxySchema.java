@@ -4,17 +4,12 @@ import com.opencredo.proxology.handlers.MethodInterpreter;
 import com.opencredo.proxology.handlers.early.ClassInterpreter;
 import com.opencredo.proxology.handlers.early.UnboundMethodInterpreter;
 import com.opencredo.proxology.memoization.Memoizer;
-import com.opencredo.proxology.reflection.MethodInfo;
-import com.opencredo.proxology.utils.Nonchalantly;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.util.Arrays;
+import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class BeanProxySchema {
 
@@ -25,29 +20,27 @@ public class BeanProxySchema {
     }
 
     private static BeanProxySchema forClassUncached(Class<?> iface) {
-        BeanInfo beanInfo = Nonchalantly.invoke(() -> Introspector.getBeanInfo(iface));
-        PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
-
-        String[] propertyNames = Stream.of(descriptors)
-                .map(PropertyDescriptor::getName)
-                .toArray(String[]::new);
+        BeanPropertyAnalysis ifacePropertyAnalysis = BeanPropertyAnalysis.forClass(iface);
 
         return new BeanProxySchema(
-                propertyNames,
-                ClassInterpreter.mappingWith(getInterpreter(propertyNames)).interpret(iface));
+                ifacePropertyAnalysis.getPropertyNames(),
+                ClassInterpreter.mappingWith(
+                        getInterpreter(
+                                ifacePropertyAnalysis.getGetterIndices(),
+                                ifacePropertyAnalysis.getSetterIndices()))
+                        .interpret(iface));
     }
 
-    private static UnboundMethodInterpreter<BeanProxyStorage> getInterpreter(String[] propertyNames) {
+    private static UnboundMethodInterpreter<BeanProxyStorage> getInterpreter(Map<Method, Integer> getterIndices, Map<Method, Integer> setterIndices) {
         return method -> {
-            MethodInfo methodInfo = MethodInfo.forMethod(method);
-            int storageSlotIndex = Arrays.binarySearch(propertyNames, methodInfo.getPropertyName());
-
-            if (methodInfo.isGetter()) {
-                return storage -> (proxy, args) -> storage.get(storageSlotIndex);
+            if (getterIndices.containsKey(method)) {
+                int slotIndex = getterIndices.get(method);
+                return storage -> (proxy, args) -> storage.get(slotIndex);
             }
 
-            if (methodInfo.isSetter()) {
-                return storage -> (proxy, args) -> storage.set(storageSlotIndex, args[0]);
+            if (setterIndices.containsKey(method)) {
+                int slotIndex = setterIndices.get(method);
+                return storage -> (proxy, args) -> storage.set(slotIndex, args[0]);
             }
 
             throw new IllegalArgumentException(String.format("Method %s is neither a getter nor a setter", method));

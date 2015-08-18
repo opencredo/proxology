@@ -36,6 +36,7 @@ public final class MethodInterpreters {
             if (method.getDeclaringClass().isAssignableFrom(target.getClass())) {
                 return (proxy, args) -> method.invoke(target, args);
             }
+
             return unboundInterpreter.interpret(method);
         };
     }
